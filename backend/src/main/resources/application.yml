@@ -41,3 +41,10 @@ jwt:
 
 stock:
   seed-money: 1000000
+
+finnhub:
+  api-key: d84qfqpr01qutij9qhagd84qfqpr01qutij9qhb0
+  us-symbols: AAPL,TSLA,NVDA,MSFT,AMZN,GOOGL,META
+
+yahoo:
+  kr-symbols: 005930.KS,000660.KS,035420.KS,035720.KQ,005380.KS,051910.KS,006400.KS

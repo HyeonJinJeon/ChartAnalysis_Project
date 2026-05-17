@@ -20,7 +20,8 @@ public class StockDataScheduler {
     private final StockDataProducer producer;
     private final Random random = new Random();
 
-    @Scheduled(fixedDelay = 2000)
+    // Disabled: replaced by FinnhubWebSocketClient (US) and YahooFinanceScheduler (KR)
+    // @Scheduled(fixedDelay = 2000)
     public void generateStockPrices() {
         stockRepository.findAll().forEach(stock -> {
             if (stock.getCurrentPrice() == null) return;

@@ -18,12 +18,22 @@
       <div v-else class="text-text-muted text-sm mt-2">로딩 중...</div>
     </div>
 
-    <!-- Available cash -->
+    <!-- Dual wallet: KRW + USD -->
     <div v-if="portfolio" class="px-4 py-3 border-b border-border">
-      <div class="flex justify-between items-center text-sm">
-        <span class="text-text-secondary">주문 가능 금액</span>
+      <div class="flex justify-between items-center text-sm mb-2">
+        <span class="text-text-secondary">원화 잔액 (KRW)</span>
         <span class="font-semibold">{{ formatAmount(portfolio.availableCash) }}</span>
       </div>
+      <div class="flex justify-between items-center text-sm mb-3">
+        <span class="text-text-secondary">달러 잔액 (USD)</span>
+        <span class="font-semibold">${{ Number(portfolio.availableUsd || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}</span>
+      </div>
+      <button
+        @click="openExchangeModal"
+        class="w-full py-1.5 rounded-lg text-xs font-medium bg-bg-secondary hover:bg-bg-tertiary text-text-secondary border border-border transition-colors"
+      >
+        환전하기
+      </button>
     </div>
 
     <!-- Trade buttons for selected stock -->
@@ -69,6 +79,13 @@
       @close="tradeModal.show = false"
       @success="onTradeSuccess"
     />
+
+    <!-- Exchange Modal -->
+    <ExchangeModal
+      v-if="showExchangeModal"
+      @close="showExchangeModal = false"
+      @success="onExchangeSuccess"
+    />
   </div>
 </template>
 
@@ -79,6 +96,7 @@ import { usePortfolioStore } from '@/stores/portfolio'
 import { useStockStore } from '@/stores/stock'
 import { formatAmount, formatChangeRate } from '@/utils/format'
 import TradeModal from './TradeModal.vue'
+import ExchangeModal from './ExchangeModal.vue'
 
 const portfolioStore = usePortfolioStore()
 const stockStore = useStockStore()
@@ -90,9 +108,14 @@ const totalPortfolioValue = computed(() => {
 })
 
 const tradeModal = ref({ show: false, type: 'BUY' })
+const showExchangeModal = ref(false)
 
 function openTradeModal(type) {
   tradeModal.value = { show: true, type }
+}
+
+function openExchangeModal() {
+  showExchangeModal.value = true
 }
 
 async function onTradeSuccess() {
@@ -100,7 +123,13 @@ async function onTradeSuccess() {
   await portfolioStore.fetchPortfolio()
 }
 
+async function onExchangeSuccess() {
+  showExchangeModal.value = false
+  await portfolioStore.fetchPortfolio()
+}
+
 onMounted(() => {
   portfolioStore.fetchPortfolio()
+  portfolioStore.fetchExchangeRate()
 })
 </script>

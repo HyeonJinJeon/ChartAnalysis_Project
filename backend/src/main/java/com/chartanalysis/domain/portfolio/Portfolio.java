@@ -27,6 +27,10 @@ public class Portfolio {
     @Column(precision = 20, scale = 2, nullable = false)
     private BigDecimal availableCash;
 
+    @Column(precision = 20, scale = 6)
+    @Builder.Default
+    private BigDecimal availableUsd = BigDecimal.ZERO;
+
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
 

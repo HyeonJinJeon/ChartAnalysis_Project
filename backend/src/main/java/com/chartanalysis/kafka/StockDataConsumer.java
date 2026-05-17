@@ -55,11 +55,14 @@ public class StockDataConsumer {
     }
 
     private void saveCandle(Stock stock, StockPriceMessage message) {
+        BigDecimal open  = message.getOpenPrice()  != null ? message.getOpenPrice()  : message.getPrice();
+        BigDecimal high  = message.getHighPrice()  != null ? message.getHighPrice()  : message.getPrice();
+        BigDecimal low   = message.getLowPrice()   != null ? message.getLowPrice()   : message.getPrice();
         stockPriceRepository.save(StockPrice.builder()
                 .stock(stock)
-                .openPrice(message.getPrice())
-                .highPrice(message.getPrice())
-                .lowPrice(message.getPrice())
+                .openPrice(open)
+                .highPrice(high)
+                .lowPrice(low)
                 .closePrice(message.getPrice())
                 .volume(message.getVolume())
                 .timestamp(message.getTimestamp())

@@ -35,11 +35,11 @@
       <div class="mb-4 p-3 bg-bg-secondary rounded-lg">
         <div class="flex justify-between text-sm">
           <span class="text-text-secondary">주문 금액</span>
-          <span class="font-bold">{{ formatAmount(totalAmount) }}</span>
+          <span class="font-bold">{{ formatOrderAmount(totalAmount) }}</span>
         </div>
         <div class="flex justify-between text-xs text-text-muted mt-1">
           <span>{{ type === 'BUY' ? '주문 가능 금액' : '보유 수량' }}</span>
-          <span>{{ type === 'BUY' ? formatAmount(portfolio?.availableCash) : `${availableQuantity}주` }}</span>
+          <span>{{ type === 'BUY' ? availableBalanceText : `${availableQuantity}주` }}</span>
         </div>
       </div>
 
@@ -81,6 +81,8 @@ const quantity = ref(1)
 const isLoading = ref(false)
 const error = ref('')
 
+const isUsdStock = computed(() => stock.value?.market === 'NASDAQ')
+
 const totalAmount = computed(() => {
   if (!stock.value?.currentPrice) return 0
   return Number(stock.value.currentPrice) * quantity.value
@@ -90,6 +92,21 @@ const availableQuantity = computed(() => {
   const holding = portfolio.value?.holdings?.find(h => h.symbol === stock.value?.symbol)
   return holding?.quantity || 0
 })
+
+const availableBalanceText = computed(() => {
+  if (isUsdStock.value) {
+    const usd = Number(portfolio.value?.availableUsd || 0)
+    return `$${usd.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+  }
+  return formatAmount(portfolio.value?.availableCash)
+})
+
+function formatOrderAmount(amount) {
+  if (isUsdStock.value) {
+    return `$${Number(amount).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+  }
+  return formatAmount(amount)
+}
 
 async function executeTrade() {
   if (!stock.value) return

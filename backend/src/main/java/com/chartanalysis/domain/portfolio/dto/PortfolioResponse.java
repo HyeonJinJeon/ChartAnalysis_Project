@@ -10,6 +10,7 @@ import java.util.List;
 @AllArgsConstructor
 public class PortfolioResponse {
     private final BigDecimal availableCash;
+    private final BigDecimal availableUsd;
     private final BigDecimal totalInvested;
     private final BigDecimal currentValue;
     private final BigDecimal totalProfitLoss;

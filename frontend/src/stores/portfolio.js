@@ -6,6 +6,7 @@ export const usePortfolioStore = defineStore('portfolio', () => {
   const portfolio = ref(null)
   const isLoading = ref(false)
   const error = ref(null)
+  const exchangeRate = ref(null)
 
   async function fetchPortfolio() {
     isLoading.value = true
@@ -20,6 +21,21 @@ export const usePortfolioStore = defineStore('portfolio', () => {
     }
   }
 
+  async function fetchExchangeRate() {
+    try {
+      const { data } = await api.get('/exchange/rate')
+      exchangeRate.value = data
+    } catch (e) {
+      // ignore — rate widget will show last known value
+    }
+  }
+
+  async function exchangeCurrency(fromCurrency, amount) {
+    const { data } = await api.post('/exchange', { fromCurrency, amount })
+    await fetchPortfolio()
+    return data
+  }
+
   async function executeTrade(symbol, quantity, type) {
     const { data } = await api.post('/trade/execute', { symbol, quantity, type })
     await fetchPortfolio()
@@ -31,5 +47,9 @@ export const usePortfolioStore = defineStore('portfolio', () => {
     return data
   }
 
-  return { portfolio, isLoading, error, fetchPortfolio, executeTrade, getTradeHistory }
+  return {
+    portfolio, isLoading, error, exchangeRate,
+    fetchPortfolio, fetchExchangeRate, exchangeCurrency,
+    executeTrade, getTradeHistory
+  }
 })

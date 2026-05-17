@@ -49,8 +49,13 @@ public class PortfolioService {
                 ? totalProfitLoss.divide(totalInvested, 4, RoundingMode.HALF_UP).multiply(BigDecimal.valueOf(100))
                 : BigDecimal.ZERO;
 
+        BigDecimal availableUsd = portfolio.getAvailableUsd() != null
+                ? portfolio.getAvailableUsd()
+                : BigDecimal.ZERO;
+
         return new PortfolioResponse(
                 portfolio.getAvailableCash(),
+                availableUsd,
                 totalInvested,
                 currentValue,
                 totalProfitLoss,

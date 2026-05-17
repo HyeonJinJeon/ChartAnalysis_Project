@@ -14,6 +14,7 @@
 
 <script setup>
 import { ref, onMounted, onUnmounted } from 'vue'
+import { createStompClient } from '@/utils/websocket'
 
 const marketIndices = ref([
   { name: 'KOSPI', value: 2487.12, change: -0.43 },
@@ -25,18 +26,48 @@ const marketIndices = ref([
 ])
 
 let intervalId = null
+let stompClient = null
+let exchangeSubscription = null
 
 onMounted(() => {
+  // Simulate other indices
   intervalId = setInterval(() => {
-    marketIndices.value = marketIndices.value.map(index => ({
-      ...index,
-      value: +(index.value * (1 + (Math.random() - 0.5) * 0.001)).toFixed(2),
-      change: +(index.change + (Math.random() - 0.5) * 0.1).toFixed(2)
-    }))
+    marketIndices.value = marketIndices.value.map((index, i) => {
+      // Don't randomly update '달러/원' — it comes from WebSocket
+      if (index.name === '달러/원') return index
+      return {
+        ...index,
+        value: +(index.value * (1 + (Math.random() - 0.5) * 0.001)).toFixed(2),
+        change: +(index.change + (Math.random() - 0.5) * 0.1).toFixed(2)
+      }
+    })
   }, 3000)
+
+  // Subscribe to real exchange rate via WebSocket
+  try {
+    stompClient = createStompClient()
+    stompClient.onConnect = () => {
+      exchangeSubscription = stompClient.subscribe('/topic/exchange-rate', (message) => {
+        try {
+          const data = JSON.parse(message.body)
+          if (data.rate) {
+            const idx = marketIndices.value.findIndex(i => i.name === '달러/원')
+            if (idx !== -1) {
+              const newRate = Number(data.rate)
+              const oldRate = marketIndices.value[idx].value
+              const change = oldRate > 0 ? +((newRate - oldRate) / oldRate * 100).toFixed(2) : 0
+              marketIndices.value[idx] = { ...marketIndices.value[idx], value: newRate, change }
+            }
+          }
+        } catch (_) {}
+      })
+    }
+    stompClient.activate()
+  } catch (_) {}
 })
 
 onUnmounted(() => {
   if (intervalId) clearInterval(intervalId)
+  if (stompClient) stompClient.deactivate()
 })
 </script>

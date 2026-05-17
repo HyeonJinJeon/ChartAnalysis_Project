@@ -4,6 +4,7 @@ import com.chartanalysis.domain.portfolio.Holding;
 import com.chartanalysis.domain.portfolio.HoldingRepository;
 import com.chartanalysis.domain.portfolio.Portfolio;
 import com.chartanalysis.domain.portfolio.PortfolioRepository;
+import com.chartanalysis.domain.stock.Market;
 import com.chartanalysis.domain.stock.Stock;
 import com.chartanalysis.domain.stock.StockRepository;
 import com.chartanalysis.domain.trade.dto.TradeRequest;
@@ -45,13 +46,24 @@ public class TradeService {
         }
     }
 
+    private boolean isUsdMarket(Stock stock) {
+        return stock.getMarket() == Market.NASDAQ;
+    }
+
     private TradeResponse executeBuy(User user, Stock stock, Portfolio portfolio,
                                       int quantity, BigDecimal price, BigDecimal totalAmount) {
-        if (portfolio.getAvailableCash().compareTo(totalAmount) < 0) {
-            throw new IllegalStateException("잔액이 부족합니다. 현재 잔액: " + portfolio.getAvailableCash());
+        if (isUsdMarket(stock)) {
+            BigDecimal availableUsd = portfolio.getAvailableUsd() != null ? portfolio.getAvailableUsd() : BigDecimal.ZERO;
+            if (availableUsd.compareTo(totalAmount) < 0) {
+                throw new IllegalStateException("USD 잔액이 부족합니다. 현재 잔액: $" + availableUsd);
+            }
+            portfolio.setAvailableUsd(availableUsd.subtract(totalAmount));
+        } else {
+            if (portfolio.getAvailableCash().compareTo(totalAmount) < 0) {
+                throw new IllegalStateException("잔액이 부족합니다. 현재 잔액: " + portfolio.getAvailableCash());
+            }
+            portfolio.setAvailableCash(portfolio.getAvailableCash().subtract(totalAmount));
         }
-
-        portfolio.setAvailableCash(portfolio.getAvailableCash().subtract(totalAmount));
         portfolioRepository.save(portfolio);
 
         Holding holding = holdingRepository.findByPortfolioAndStock(portfolio, stock)
@@ -82,7 +94,12 @@ public class TradeService {
             throw new IllegalStateException("보유 수량이 부족합니다. 현재 보유: " + holding.getQuantity() + "주");
         }
 
-        portfolio.setAvailableCash(portfolio.getAvailableCash().add(totalAmount));
+        if (isUsdMarket(stock)) {
+            BigDecimal availableUsd = portfolio.getAvailableUsd() != null ? portfolio.getAvailableUsd() : BigDecimal.ZERO;
+            portfolio.setAvailableUsd(availableUsd.add(totalAmount));
+        } else {
+            portfolio.setAvailableCash(portfolio.getAvailableCash().add(totalAmount));
+        }
         portfolioRepository.save(portfolio);
 
         if (holding.getQuantity() == quantity) {
