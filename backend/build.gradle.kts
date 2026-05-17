@@ -36,7 +36,7 @@ dependencies {
     runtimeOnly("io.jsonwebtoken:jjwt-jackson:0.12.3")
 
     // DB
-    runtimeOnly("org.postgresql:postgresql")
+    runtimeOnly("com.oracle.database.jdbc:ojdbc11:23.4.0.24.05")
 
     // Lombok
     compileOnly("org.projectlombok:lombok")

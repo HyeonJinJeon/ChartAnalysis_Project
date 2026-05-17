@@ -8,7 +8,7 @@ import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "stock_prices", indexes = {
-        @Index(columnList = "stock_id, interval_type, timestamp DESC")
+        @Index(columnList = "stock_id, price_interval, timestamp DESC")
 })
 @Getter
 @Setter
@@ -39,9 +39,9 @@ public class StockPrice {
 
     private Long volume;
 
-    @Column(nullable = false)
+    @Column(name = "price_timestamp", nullable = false)
     private LocalDateTime timestamp;
 
-    @Column(name = "interval_type", nullable = false)
+    @Column(name = "price_interval", nullable = false)
     private String interval;
 }
