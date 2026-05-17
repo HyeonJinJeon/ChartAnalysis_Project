@@ -1,9 +1,11 @@
 import { Client } from '@stomp/stompjs'
-import SockJS from 'sockjs-client'
 
 export function createStompClient() {
+  const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
+  const host = import.meta.env.DEV ? 'localhost:8080' : window.location.host
+
   return new Client({
-    webSocketFactory: () => new SockJS('/ws'),
+    brokerURL: `${protocol}//${host}/ws`,
     reconnectDelay: 5000,
     onConnect: () => {
       console.log('WebSocket connected')
