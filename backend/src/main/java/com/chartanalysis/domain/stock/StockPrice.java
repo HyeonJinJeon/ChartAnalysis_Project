@@ -8,7 +8,7 @@ import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "stock_prices", indexes = {
-        @Index(columnList = "stock_id, price_interval, timestamp DESC")
+        @Index(columnList = "stock_id, price_interval, price_timestamp DESC")
 })
 @Getter
 @Setter

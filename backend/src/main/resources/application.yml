@@ -17,11 +17,6 @@ spring:
         format_sql: false
         dialect: org.hibernate.dialect.OracleDialect
 
-logging:
-  level:
-    org.hibernate.SQL: WARN
-    org.hibernate.orm.jdbc.bind: WARN
-
   kafka:
     bootstrap-servers: localhost:9092
     producer:
@@ -39,6 +34,11 @@ logging:
     redis:
       host: localhost
       port: 6379
+
+logging:
+  level:
+    org.hibernate.SQL: WARN
+    org.hibernate.orm.jdbc.bind: WARN
 
 jwt:
   secret: chartAnalysisSecretKeyForJwtTokenGenerationMustBe256BitsLong
