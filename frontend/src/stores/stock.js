@@ -100,6 +100,9 @@ export const useStockStore = defineStore('stock', () => {
 
           // Append new candle to chart if on 1m interval
           if (currentInterval.value === '1m' && data.timestamp) {
+            // Both API and WebSocket timestamps are now minute-truncated (e.g. "2026-05-20T17:48:00")
+            // Compare only up to minute (first 16 chars) to be safe
+            const toMinute = ts => ts ? ts.substring(0, 16) : ''
             const newCandle = {
               timestamp: data.timestamp,
               open: data.price,
@@ -108,9 +111,8 @@ export const useStockStore = defineStore('stock', () => {
               close: data.price,
               volume: data.volume,
             }
-            // Update last candle or add new one
             const lastCandle = candles.value[candles.value.length - 1]
-            if (lastCandle && lastCandle.timestamp === data.timestamp) {
+            if (lastCandle && toMinute(lastCandle.timestamp) === toMinute(data.timestamp)) {
               candles.value = [
                 ...candles.value.slice(0, -1),
                 {

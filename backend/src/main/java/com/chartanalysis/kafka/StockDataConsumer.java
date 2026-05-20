@@ -40,7 +40,7 @@ public class StockDataConsumer {
             stock.setVolume(message.getVolume());
             stockRepository.save(stock);
 
-            saveCandle(stock, message);
+            java.time.LocalDateTime minuteTs = saveCandle(stock, message);
 
             messagingTemplate.convertAndSend(
                     "/topic/stocks/" + message.getSymbol(),
@@ -49,13 +49,13 @@ public class StockDataConsumer {
                             "price", message.getPrice(),
                             "changeRate", changeRate.setScale(2, RoundingMode.HALF_UP),
                             "volume", message.getVolume(),
-                            "timestamp", message.getTimestamp().toString()
+                            "timestamp", minuteTs.toString()
                     )
             );
         });
     }
 
-    private void saveCandle(Stock stock, StockPriceMessage message) {
+    private java.time.LocalDateTime saveCandle(Stock stock, StockPriceMessage message) {
         // Truncate to the current minute boundary for proper 1m OHLC aggregation
         java.time.LocalDateTime minuteTs = message.getTimestamp().truncatedTo(ChronoUnit.MINUTES);
         BigDecimal price = message.getPrice();
@@ -81,5 +81,6 @@ public class StockDataConsumer {
                             .interval("1m")
                             .build());
                 });
+        return minuteTs;
     }
 }
