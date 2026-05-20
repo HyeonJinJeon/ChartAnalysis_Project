@@ -2,8 +2,6 @@ package com.chartanalysis.config;
 
 import com.chartanalysis.domain.stock.Market;
 import com.chartanalysis.domain.stock.Stock;
-import com.chartanalysis.domain.stock.StockPrice;
-import com.chartanalysis.domain.stock.StockPriceRepository;
 import com.chartanalysis.domain.stock.StockRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -13,11 +11,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
-import java.math.RoundingMode;
-import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Random;
 
 @Slf4j
 @Component
@@ -25,8 +19,6 @@ import java.util.Random;
 public class DataInitializer implements ApplicationRunner {
 
     private final StockRepository stockRepository;
-    private final StockPriceRepository stockPriceRepository;
-    private final Random random = new Random();
 
     @Override
     @Transactional
@@ -86,39 +78,7 @@ public class DataInitializer implements ApplicationRunner {
                 .changeRate(BigDecimal.ZERO).volume(0L).build()
         );
 
-        List<Stock> saved = stockRepository.saveAll(stocks);
-        log.info("Seeded {} stocks.", saved.size());
-
-        for (Stock stock : saved) {
-            generateInitialCandles(stock, stock.getCurrentPrice());
-        }
-        log.info("Generated initial candle data for {} stocks.", saved.size());
-    }
-
-    private void generateInitialCandles(Stock stock, BigDecimal basePrice) {
-        List<StockPrice> candles = new ArrayList<>();
-        BigDecimal price = basePrice;
-        LocalDateTime now = LocalDateTime.now().withMinute(0).withSecond(0).withNano(0);
-
-        for (int i = 99; i >= 0; i--) {
-            double change = (random.nextDouble() - 0.5) * 0.02;
-            BigDecimal open = price;
-            BigDecimal close = price.multiply(BigDecimal.valueOf(1 + change));
-            BigDecimal high = open.max(close).multiply(BigDecimal.valueOf(1 + random.nextDouble() * 0.005));
-            BigDecimal low = open.min(close).multiply(BigDecimal.valueOf(1 - random.nextDouble() * 0.005));
-
-            candles.add(StockPrice.builder()
-                    .stock(stock)
-                    .openPrice(open.setScale(2, RoundingMode.HALF_UP))
-                    .highPrice(high.setScale(2, RoundingMode.HALF_UP))
-                    .lowPrice(low.setScale(2, RoundingMode.HALF_UP))
-                    .closePrice(close.setScale(2, RoundingMode.HALF_UP))
-                    .volume(random.nextLong(100000, 5000000))
-                    .timestamp(now.minusMinutes(i))
-                    .interval("1m")
-                    .build());
-            price = close;
-        }
-        stockPriceRepository.saveAll(candles);
+        stockRepository.saveAll(stocks);
+        log.info("Seeded {} stocks. Candle data will be fetched from Yahoo Finance on first chart view.", stocks.size());
     }
 }
