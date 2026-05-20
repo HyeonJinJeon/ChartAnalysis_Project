@@ -57,7 +57,7 @@ cd backend && ./gradlew test --tests "com.chartanalysis.패키지.클래스명"
 - [ ] 새 엔드포인트 추가 시 → `SecurityConfig`의 permitAll/authenticated 규칙 확인
 - [ ] 새 도메인 추가 시 → `DataInitializer`에 초기 데이터 필요 여부 확인
 - [ ] Kafka 메시지 구조 변경 시 → `StockPriceMessage` DTO와 Consumer/Producer 양쪽 동시 수정
-- [ ] DB 엔티티 변경 시 → `ddl-auto: create-drop`이므로 재시작하면 **전체 데이터 소멸** 주의
+- [ ] DB 엔티티 변경 시 → `ddl-auto: update`이므로 컬럼 추가/변경은 자동 반영되나, **컬럼 삭제나 타입 변경은 수동 DDL 필요**
 
 ---
 
@@ -160,7 +160,7 @@ exchangerate-api.com ──► ExchangeRateScheduler ──► Redis "exchange:U
 | 프론트엔드 포트 | 5173 |
 | DB | Oracle `FREEPDB1` / chartuser:chartpass |
 | JWT 만료 | 24시간 |
-| ddl-auto | `create-drop` (재시작 시 데이터 전체 초기화) |
+| ddl-auto | `update` (재시작 시 데이터 유지, 스키마 변경만 반영) |
 | 시드머니 | 1,000,000 KRW / 월 |
 
 ---
