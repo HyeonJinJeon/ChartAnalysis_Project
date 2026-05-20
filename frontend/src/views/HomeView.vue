@@ -40,23 +40,18 @@
         </div>
 
         <!-- Candlestick chart -->
-        <div class="flex-1 p-4">
+        <div class="flex-1 min-h-0 p-4">
           <CandlestickChart class="w-full h-full" />
         </div>
 
-        <!-- News section -->
-        <div v-if="stockStore.selectedStock" class="border-t border-border px-6 py-4 shrink-0">
-          <h3 class="text-sm font-semibold text-text-secondary mb-3">왜 올랐을까?</h3>
-          <div class="flex gap-4 overflow-x-auto">
-            <div
-              v-for="news in mockNews"
-              :key="news.id"
-              class="shrink-0 w-48 p-3 bg-bg-secondary rounded-xl border border-border"
-            >
-              <div class="text-xs text-toss-blue font-semibold mb-1">{{ news.tag }}</div>
-              <div class="text-sm text-text-primary leading-relaxed">{{ news.title }}</div>
-              <div class="text-xs text-text-muted mt-2">{{ news.time }}</div>
-            </div>
+        <!-- Stock info + news panel -->
+        <div class="h-[260px] shrink-0">
+          <StockInfoPanel
+            v-if="stockStore.selectedStock"
+            :symbol="stockStore.selectedStock.symbol"
+          />
+          <div v-else class="h-full border-t border-border flex items-center justify-center text-text-muted text-sm">
+            종목을 선택하면 기업정보와 뉴스를 확인할 수 있어요
           </div>
         </div>
       </main>
@@ -70,26 +65,17 @@
 </template>
 
 <script setup>
-import { onMounted, onUnmounted, computed } from 'vue'
+import { onMounted, onUnmounted } from 'vue'
 import NavBar from '@/components/layout/NavBar.vue'
 import MarketBar from '@/components/layout/MarketBar.vue'
 import StockList from '@/components/stock/StockList.vue'
 import CandlestickChart from '@/components/stock/CandlestickChart.vue'
+import StockInfoPanel from '@/components/stock/StockInfoPanel.vue'
 import PortfolioSidebar from '@/components/portfolio/PortfolioSidebar.vue'
 import { useStockStore } from '@/stores/stock'
 import { formatPrice, formatChangeRate } from '@/utils/format'
 
 const stockStore = useStockStore()
-
-const mockNews = computed(() => {
-  const stock = stockStore.selectedStock
-  if (!stock) return []
-  return [
-    { id: 1, tag: '기관 매수세', title: `기관 투자자가 ${stock.name} 6일 연속 사고 있어요.`, time: '1일 전' },
-    { id: 2, tag: '외국인 순매수', title: `외국인이 많이 산 Top 10 종목이에요.`, time: '2일 전' },
-    { id: 3, tag: 'AI 분석', title: `${stock.name} 실적 발표 앞두고 기대감 상승 중`, time: '3일 전' },
-  ]
-})
 
 function priceColor(rate) {
   const n = Number(rate)
