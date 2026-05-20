@@ -2,6 +2,8 @@ package com.chartanalysis.domain.stock;
 
 import com.chartanalysis.domain.stock.dto.CandleResponse;
 import com.chartanalysis.domain.stock.dto.MarketIndexResponse;
+import com.chartanalysis.domain.stock.dto.StockInfoResponse;
+import com.chartanalysis.domain.stock.dto.StockNewsItem;
 import com.chartanalysis.domain.stock.dto.StockResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -37,5 +39,15 @@ public class StockController {
             @RequestParam(defaultValue = "1m") String interval,
             @RequestParam(defaultValue = "100") int limit) {
         return ResponseEntity.ok(stockService.getCandles(symbol, interval, limit));
+    }
+
+    @GetMapping("/{symbol}/info")
+    public ResponseEntity<StockInfoResponse> getStockInfo(@PathVariable String symbol) {
+        return ResponseEntity.ok(stockService.getStockInfo(symbol));
+    }
+
+    @GetMapping("/{symbol}/news")
+    public ResponseEntity<List<StockNewsItem>> getStockNews(@PathVariable String symbol) {
+        return ResponseEntity.ok(stockService.getStockNews(symbol));
     }
 }
