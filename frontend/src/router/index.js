@@ -27,6 +27,12 @@ const router = createRouter({
       name: 'portfolio',
       component: () => import('@/views/PortfolioView.vue'),
       meta: { requiresAuth: true }
+    },
+    {
+      path: '/screener',
+      name: 'screener',
+      component: () => import('@/views/StockScreenerView.vue'),
+      meta: { requiresAuth: true }
     }
   ]
 })

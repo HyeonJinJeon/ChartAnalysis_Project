@@ -10,7 +10,7 @@
       <!-- Nav links -->
       <nav class="flex items-center gap-6">
         <RouterLink to="/" class="nav-link" :class="{ active: route.name === 'home' }">홈</RouterLink>
-        <RouterLink to="/" class="nav-link">주식 골라보기</RouterLink>
+        <RouterLink to="/screener" class="nav-link" :class="{ active: route.name === 'screener' }">주식 골라보기</RouterLink>
         <RouterLink to="/portfolio" class="nav-link" :class="{ active: route.name === 'portfolio' }">내 계좌</RouterLink>
       </nav>
 
