@@ -1,6 +1,7 @@
 package com.chartanalysis.domain.stock;
 
 import com.chartanalysis.domain.stock.dto.CandleResponse;
+import com.chartanalysis.domain.stock.dto.MarketIndexResponse;
 import com.chartanalysis.domain.stock.dto.StockResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -18,6 +19,11 @@ public class StockController {
     @GetMapping
     public ResponseEntity<List<StockResponse>> getAllStocks() {
         return ResponseEntity.ok(stockService.getAllStocks());
+    }
+
+    @GetMapping("/indices")
+    public ResponseEntity<List<MarketIndexResponse>> getMarketIndices() {
+        return ResponseEntity.ok(stockService.getMarketIndices());
     }
 
     @GetMapping("/{symbol}")

@@ -72,6 +72,8 @@ function priceColor(rate) {
 
 onMounted(async () => {
   await stockStore.fetchStocks()
+  // Subscribe to all stocks for live price updates now that list is loaded
+  stockStore.subscribeToAllStocks()
   if (stockStore.stocks.length > 0 && !stockStore.selectedStock) {
     stockStore.selectStock(stockStore.stocks[0].symbol)
   }

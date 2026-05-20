@@ -9,8 +9,9 @@ export const useStockStore = defineStore('stock', () => {
   const candles = ref([])
   const activeFilter = ref('전체')
   const isLoading = ref(false)
+  const currentInterval = ref('1m')
   let stompClient = null
-  let currentSubscription = null
+  const stockSubscriptions = new Map()
 
   const filteredStocks = computed(() => {
     if (activeFilter.value === '국내') {
@@ -29,8 +30,7 @@ export const useStockStore = defineStore('stock', () => {
   async function selectStock(symbol) {
     const stock = stocks.value.find(s => s.symbol === symbol)
     selectedStock.value = stock || null
-    await fetchCandles(symbol)
-    subscribeToStock(symbol)
+    await fetchCandles(symbol, currentInterval.value)
   }
 
   async function fetchCandles(symbol, interval = '1m', limit = 100) {
@@ -45,27 +45,113 @@ export const useStockStore = defineStore('stock', () => {
     }
   }
 
+  async function setInterval(interval) {
+    currentInterval.value = interval
+    if (selectedStock.value) {
+      await fetchCandles(selectedStock.value.symbol, interval)
+    }
+  }
+
   function connectWebSocket() {
+    if (stompClient && stompClient.active) return // already connecting/connected
     stompClient = createStompClient()
+
+    stompClient.onConnect = () => {
+      // Subscribe to all currently loaded stocks (may be empty if stocks aren't fetched yet)
+      stocks.value.forEach(stock => {
+        _subscribeToSymbol(stock.symbol)
+      })
+    }
+
     stompClient.activate()
   }
 
-  function subscribeToStock(symbol) {
+  function _subscribeToSymbol(symbol) {
     if (!stompClient || !stompClient.connected) return
+    if (stockSubscriptions.has(symbol)) return // already subscribed
 
-    if (currentSubscription) {
-      currentSubscription.unsubscribe()
+    const sub = stompClient.subscribe(`/topic/stocks/${symbol}`, (message) => {
+      try {
+        const data = JSON.parse(message.body)
+
+        // Update stocks list reactively using spread to trigger Vue reactivity
+        const stockIndex = stocks.value.findIndex(s => s.symbol === data.symbol)
+        if (stockIndex !== -1) {
+          stocks.value = [
+            ...stocks.value.slice(0, stockIndex),
+            {
+              ...stocks.value[stockIndex],
+              currentPrice: data.price,
+              changeRate: data.changeRate,
+              volume: data.volume,
+            },
+            ...stocks.value.slice(stockIndex + 1),
+          ]
+        }
+
+        // Update selectedStock if it matches
+        if (selectedStock.value?.symbol === data.symbol) {
+          selectedStock.value = {
+            ...selectedStock.value,
+            currentPrice: data.price,
+            changeRate: data.changeRate,
+            volume: data.volume,
+          }
+
+          // Append new candle to chart if on 1m interval
+          if (currentInterval.value === '1m' && data.timestamp) {
+            const newCandle = {
+              timestamp: data.timestamp,
+              open: data.price,
+              high: data.price,
+              low: data.price,
+              close: data.price,
+              volume: data.volume,
+            }
+            // Update last candle or add new one
+            const lastCandle = candles.value[candles.value.length - 1]
+            if (lastCandle && lastCandle.timestamp === data.timestamp) {
+              candles.value = [
+                ...candles.value.slice(0, -1),
+                {
+                  ...lastCandle,
+                  close: data.price,
+                  high: Math.max(Number(lastCandle.high), Number(data.price)),
+                  low: Math.min(Number(lastCandle.low), Number(data.price)),
+                  volume: data.volume,
+                },
+              ]
+            } else {
+              candles.value = [...candles.value, newCandle]
+            }
+          }
+        }
+      } catch (e) {
+        console.error('WS message parse error', e)
+      }
+    })
+
+    stockSubscriptions.set(symbol, sub)
+  }
+
+  function subscribeToAllStocks() {
+    if (!stompClient) {
+      // WebSocket not even initialised yet — connect now
+      connectWebSocket()
+      return
     }
-
-    currentSubscription = stompClient.subscribe(`/topic/stocks/${symbol}`, (message) => {
-      const data = JSON.parse(message.body)
-      const stockIndex = stocks.value.findIndex(s => s.symbol === data.symbol)
-      if (stockIndex !== -1) {
-        stocks.value[stockIndex] = { ...stocks.value[stockIndex], ...data }
+    if (!stompClient.connected) {
+      // Connected event not yet fired; onConnect will call _subscribeToSymbol for each stock
+      // Re-register onConnect to also pick up newly loaded stocks
+      const prevOnConnect = stompClient.onConnect
+      stompClient.onConnect = (frame) => {
+        if (prevOnConnect) prevOnConnect(frame)
+        stocks.value.forEach(stock => _subscribeToSymbol(stock.symbol))
       }
-      if (selectedStock.value?.symbol === data.symbol) {
-        selectedStock.value = { ...selectedStock.value, ...data }
-      }
+      return
+    }
+    stocks.value.forEach(stock => {
+      _subscribeToSymbol(stock.symbol)
     })
   }
 
@@ -73,6 +159,7 @@ export const useStockStore = defineStore('stock', () => {
     if (stompClient) {
       stompClient.deactivate()
     }
+    stockSubscriptions.clear()
   }
 
   function setFilter(filter) {
@@ -80,9 +167,9 @@ export const useStockStore = defineStore('stock', () => {
   }
 
   return {
-    stocks, selectedStock, candles, activeFilter, isLoading,
+    stocks, selectedStock, candles, activeFilter, isLoading, currentInterval,
     filteredStocks,
-    fetchStocks, selectStock, fetchCandles,
-    connectWebSocket, disconnectWebSocket, subscribeToStock, setFilter
+    fetchStocks, selectStock, fetchCandles, setInterval,
+    connectWebSocket, disconnectWebSocket, subscribeToAllStocks, setFilter
   }
 })

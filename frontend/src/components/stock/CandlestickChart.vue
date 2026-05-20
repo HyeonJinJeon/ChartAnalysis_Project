@@ -1,8 +1,26 @@
 <template>
-  <div class="relative w-full h-full">
-    <div ref="chartContainer" class="w-full h-full"></div>
-    <div v-if="!stockStore.selectedStock" class="absolute inset-0 flex items-center justify-center text-text-muted">
-      종목을 선택하세요
+  <div class="relative w-full h-full flex flex-col">
+    <!-- Interval selector buttons -->
+    <div class="flex items-center gap-1 px-3 py-2 shrink-0">
+      <button
+        v-for="btn in intervalButtons"
+        :key="btn.value"
+        @click="changeInterval(btn.value)"
+        class="px-3 py-1 text-xs font-medium rounded transition-colors"
+        :class="stockStore.currentInterval === btn.value
+          ? 'bg-[#2a2a2a] text-white'
+          : 'text-[#666] hover:text-[#999]'"
+      >
+        {{ btn.label }}
+      </button>
+    </div>
+
+    <!-- Chart area -->
+    <div class="relative flex-1">
+      <div ref="chartContainer" class="w-full h-full"></div>
+      <div v-if="!stockStore.selectedStock" class="absolute inset-0 flex items-center justify-center text-text-muted">
+        종목을 선택하세요
+      </div>
     </div>
   </div>
 </template>
@@ -17,6 +35,17 @@ const stockStore = useStockStore()
 let chart = null
 let candleSeries = null
 let volumeSeries = null
+
+const intervalButtons = [
+  { label: '1분', value: '1m' },
+  { label: '일봉', value: '1d' },
+  { label: '주봉', value: '1wk' },
+  { label: '월봉', value: '1mo' },
+]
+
+async function changeInterval(interval) {
+  await stockStore.setInterval(interval)
+}
 
 onMounted(() => {
   chart = createChart(chartContainer.value, {
