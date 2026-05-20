@@ -62,11 +62,11 @@
                     <div class="text-xs text-text-muted">{{ holding.symbol }}</div>
                   </td>
                   <td class="px-6 py-4 text-right text-sm">{{ holding.quantity }}주</td>
-                  <td class="px-6 py-4 text-right text-sm">{{ formatAmount(holding.avgPrice) }}</td>
-                  <td class="px-6 py-4 text-right text-sm">{{ formatAmount(holding.currentPrice) }}</td>
-                  <td class="px-6 py-4 text-right text-sm font-semibold">{{ formatAmount(holding.currentValue) }}</td>
+                  <td class="px-6 py-4 text-right text-sm">{{ formatAmountByCurrency(holding.avgPrice, holding.market) }}</td>
+                  <td class="px-6 py-4 text-right text-sm">{{ formatAmountByCurrency(holding.currentPrice, holding.market) }}</td>
+                  <td class="px-6 py-4 text-right text-sm font-semibold">{{ formatAmountByCurrency(holding.currentValue, holding.market) }}</td>
                   <td class="px-6 py-4 text-right text-sm font-semibold" :class="holding.profitLoss >= 0 ? 'text-up' : 'text-down'">
-                    {{ holding.profitLoss >= 0 ? '+' : '' }}{{ formatAmount(holding.profitLoss) }}
+                    {{ holding.profitLoss >= 0 ? '+' : '' }}{{ formatAmountByCurrency(holding.profitLoss, holding.market) }}
                   </td>
                   <td class="px-6 py-4 text-right text-sm font-semibold" :class="holding.profitLossRate >= 0 ? 'text-up' : 'text-down'">
                     {{ formatChangeRate(holding.profitLossRate) }}
@@ -113,8 +113,8 @@
                     </span>
                   </td>
                   <td class="px-6 py-3 text-right text-sm">{{ trade.quantity }}주</td>
-                  <td class="px-6 py-3 text-right text-sm">{{ formatAmount(trade.price) }}</td>
-                  <td class="px-6 py-3 text-right text-sm font-semibold">{{ formatAmount(trade.totalAmount) }}</td>
+                  <td class="px-6 py-3 text-right text-sm">{{ formatAmountByCurrency(trade.price, trade.market) }}</td>
+                  <td class="px-6 py-3 text-right text-sm font-semibold">{{ formatAmountByCurrency(trade.totalAmount, trade.market) }}</td>
                 </tr>
               </tbody>
             </table>
@@ -130,7 +130,7 @@ import { ref, computed, onMounted } from 'vue'
 import NavBar from '@/components/layout/NavBar.vue'
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue'
 import { usePortfolioStore } from '@/stores/portfolio'
-import { formatAmount, formatChangeRate } from '@/utils/format'
+import { formatAmount, formatAmountByCurrency, formatChangeRate } from '@/utils/format'
 
 const portfolioStore = usePortfolioStore()
 const portfolio = computed(() => portfolioStore.portfolio)

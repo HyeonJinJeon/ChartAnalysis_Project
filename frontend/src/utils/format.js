@@ -26,3 +26,11 @@ export function formatAmount(amount) {
   if (!amount) return '0원'
   return `${Number(amount).toLocaleString('ko-KR')}원`
 }
+
+export function formatAmountByCurrency(amount, market) {
+  if (amount === null || amount === undefined) return market === 'NASDAQ' ? '$0.00' : '0원'
+  if (market === 'NASDAQ') {
+    return `$${Number(amount).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+  }
+  return `${Number(amount).toLocaleString('ko-KR')}원`
+}

@@ -11,6 +11,7 @@ public class TradeResponse {
     private final Long tradeId;
     private final String symbol;
     private final String stockName;
+    private final String market;
     private final String type;
     private final Integer quantity;
     private final BigDecimal price;
@@ -22,6 +23,7 @@ public class TradeResponse {
         this.tradeId = trade.getId();
         this.symbol = trade.getStock().getSymbol();
         this.stockName = trade.getStock().getName();
+        this.market = trade.getStock().getMarket().name();
         this.type = trade.getType().name();
         this.quantity = trade.getQuantity();
         this.price = trade.getPrice();

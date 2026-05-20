@@ -1,6 +1,7 @@
 package com.chartanalysis.domain.portfolio.dto;
 
 import com.chartanalysis.domain.portfolio.Holding;
+import com.chartanalysis.domain.stock.Market;
 import lombok.Getter;
 
 import java.math.BigDecimal;
@@ -10,6 +11,7 @@ import java.math.RoundingMode;
 public class HoldingResponse {
     private final String symbol;
     private final String name;
+    private final String market;
     private final Integer quantity;
     private final BigDecimal avgPrice;
     private final BigDecimal currentPrice;
@@ -20,6 +22,7 @@ public class HoldingResponse {
     public HoldingResponse(Holding holding) {
         this.symbol = holding.getStock().getSymbol();
         this.name = holding.getStock().getName();
+        this.market = holding.getStock().getMarket().name();
         this.quantity = holding.getQuantity();
         this.avgPrice = holding.getAvgPrice();
         this.currentPrice = holding.getStock().getCurrentPrice();
