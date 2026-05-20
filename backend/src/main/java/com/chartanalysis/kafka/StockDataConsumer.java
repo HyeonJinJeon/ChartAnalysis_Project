@@ -69,14 +69,12 @@ public class StockDataConsumer {
                     existing.setVolume(message.getVolume());
                     stockPriceRepository.save(existing);
                 }, () -> {
-                    BigDecimal open = message.getOpenPrice() != null ? message.getOpenPrice() : price;
-                    BigDecimal high = message.getHighPrice() != null ? message.getHighPrice() : price;
-                    BigDecimal low  = message.getLowPrice()  != null ? message.getLowPrice()  : price;
+                    // New candle: open=high=low=close=current price; wicks grow via subsequent updates
                     stockPriceRepository.save(StockPrice.builder()
                             .stock(stock)
-                            .openPrice(open)
-                            .highPrice(high)
-                            .lowPrice(low)
+                            .openPrice(price)
+                            .highPrice(price)
+                            .lowPrice(price)
                             .closePrice(price)
                             .volume(message.getVolume())
                             .timestamp(minuteTs)
