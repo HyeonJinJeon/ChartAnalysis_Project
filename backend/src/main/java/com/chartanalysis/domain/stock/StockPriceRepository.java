@@ -13,6 +13,8 @@ import java.util.Optional;
 public interface StockPriceRepository extends JpaRepository<StockPrice, Long> {
     List<StockPrice> findByStockAndIntervalOrderByTimestampDesc(Stock stock, String interval, Pageable pageable);
 
+    Optional<StockPrice> findByStockAndIntervalAndTimestamp(Stock stock, String interval, LocalDateTime timestamp);
+
     @Query("SELECT MAX(sp.highPrice) FROM StockPrice sp WHERE sp.stock = :stock AND sp.interval = '1d' AND sp.timestamp >= :since")
     Optional<BigDecimal> findMaxHighPriceSince(@Param("stock") Stock stock, @Param("since") LocalDateTime since);
 

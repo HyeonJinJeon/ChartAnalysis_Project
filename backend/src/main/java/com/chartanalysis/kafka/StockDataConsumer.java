@@ -13,6 +13,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.time.temporal.ChronoUnit;
 import java.util.Map;
 
 @Slf4j
@@ -55,18 +56,32 @@ public class StockDataConsumer {
     }
 
     private void saveCandle(Stock stock, StockPriceMessage message) {
-        BigDecimal open  = message.getOpenPrice()  != null ? message.getOpenPrice()  : message.getPrice();
-        BigDecimal high  = message.getHighPrice()  != null ? message.getHighPrice()  : message.getPrice();
-        BigDecimal low   = message.getLowPrice()   != null ? message.getLowPrice()   : message.getPrice();
-        stockPriceRepository.save(StockPrice.builder()
-                .stock(stock)
-                .openPrice(open)
-                .highPrice(high)
-                .lowPrice(low)
-                .closePrice(message.getPrice())
-                .volume(message.getVolume())
-                .timestamp(message.getTimestamp())
-                .interval("1m")
-                .build());
+        // Truncate to the current minute boundary for proper 1m OHLC aggregation
+        java.time.LocalDateTime minuteTs = message.getTimestamp().truncatedTo(ChronoUnit.MINUTES);
+        BigDecimal price = message.getPrice();
+
+        stockPriceRepository.findByStockAndIntervalAndTimestamp(stock, "1m", minuteTs)
+                .ifPresentOrElse(existing -> {
+                    // Update OHLC: high/low may widen, close always moves to latest price
+                    if (price.compareTo(existing.getHighPrice()) > 0) existing.setHighPrice(price);
+                    if (price.compareTo(existing.getLowPrice()) < 0)  existing.setLowPrice(price);
+                    existing.setClosePrice(price);
+                    existing.setVolume(message.getVolume());
+                    stockPriceRepository.save(existing);
+                }, () -> {
+                    BigDecimal open = message.getOpenPrice() != null ? message.getOpenPrice() : price;
+                    BigDecimal high = message.getHighPrice() != null ? message.getHighPrice() : price;
+                    BigDecimal low  = message.getLowPrice()  != null ? message.getLowPrice()  : price;
+                    stockPriceRepository.save(StockPrice.builder()
+                            .stock(stock)
+                            .openPrice(open)
+                            .highPrice(high)
+                            .lowPrice(low)
+                            .closePrice(price)
+                            .volume(message.getVolume())
+                            .timestamp(minuteTs)
+                            .interval("1m")
+                            .build());
+                });
     }
 }
