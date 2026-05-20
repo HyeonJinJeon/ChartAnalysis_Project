@@ -1,0 +1,38 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node -e \"const f=process.env.CLAUDE_TOOL_INPUT_FILE_PATH||''; if(f.includes('backend') && f.endsWith('.java')) { const {execSync}=require('child_process'); try { execSync('cd backend && gradlew.bat compileJava', {stdio:'inherit', cwd: process.cwd()}); } catch(e) { process.exit(1); } }\"",
+            "description": "백엔드 Java 파일 변경 시 자동 컴파일 확인"
+          }
+        ]
+      },
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node -e \"const f=process.env.CLAUDE_TOOL_INPUT_FILE_PATH||''; if((f.includes('frontend') && !f.includes('node_modules')) && (f.endsWith('.vue')||f.endsWith('.js'))) { const {execSync}=require('child_process'); try { execSync('cd frontend && npm run build -- --mode development 2>&1 | head -30', {stdio:'inherit', shell:true, cwd: process.cwd()}); } catch(e) { process.exit(1); } }\"",
+            "description": "프론트엔드 Vue/JS 파일 변경 시 자동 빌드 확인"
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node -e \"const cmd=process.env.CLAUDE_TOOL_INPUT_COMMAND||''; if(cmd.includes('bootRun')||cmd.includes('gradlew build')) { const {execSync}=require('child_process'); try { const out=execSync('docker ps --filter name=oracle --filter name=kafka --filter name=redis --format {{.Names}}', {encoding:'utf8'}); const running=out.trim().split('\\n').filter(Boolean); const needed=['oracle','kafka','redis']; const missing=needed.filter(n=>!running.some(r=>r.includes(n))); if(missing.length>0){ console.error('\\n[하네스 경고] 다음 컨테이너가 실행 중이 아닙니다: '+missing.join(', ')); console.error('먼저 docker-compose up -d 를 실행하세요.\\n'); process.exit(1); } } catch(e){} }\"",
+            "description": "백엔드 실행 전 Docker 인프라(Oracle/Kafka/Redis) 상태 자동 확인"
+          }
+        ]
+      }
+    ]
+  }
+}
